@@ -308,7 +308,6 @@ const Form = () => {
   const [elts, setElts] = useState([]);
   const router = useRouter();
   const { type, id, data } = router.query
-  console.log("Form type=" + type + " id=" + id);
   useEffect(() => {
     try {
       setElts(render(JSON.parse(data || sampleData)));
