@@ -1,0 +1,10 @@
+.area {
+    composes: c3-area from './style.css';
+    composes: values from './style.css';
+    composes: value-multiplier from './style.css';
+    composes: c3-line from './style.css';
+    composes: c3-chart-arcs from './style.css';
+    composes: c3-line from './style.css';
+    color: red;
+    fill-opacity: 0;
+}

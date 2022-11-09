@@ -3,16 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 51",
+    "dev": "next dev -p 5147",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
-    "@graffiticode/basis": "file:../basis",
+    "@graffiticode/basis": "file:../../graffiticode/basis",
     "@types/node": "18.11.9",
     "@types/react": "18.0.25",
     "@types/react-dom": "18.0.8",
+    "c3": "^0.7.20",
+    "d3": "^7.6.1",
     "eslint": "8.27.0",
     "eslint-config-next": "13.0.2",
     "next": "13.0.2",
