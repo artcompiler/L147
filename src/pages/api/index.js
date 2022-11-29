@@ -1,4 +1,4 @@
-import { compiler } from './src/compiler.js';
+import { compiler } from './compiler.js';
 export default function compileHandler(req, res) {
   const {
     method,
