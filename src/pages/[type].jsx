@@ -317,7 +317,7 @@ const Form = () => {
     }
   }, [data]);
   return (
-    <div className="graffito"> {elts} </div>
+    <div id="graffiti"> {elts} </div>
   );
 }
 
