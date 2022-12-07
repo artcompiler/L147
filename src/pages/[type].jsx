@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import * as d3 from 'd3';
-import styles from '../styles/Form.module.css';
 
 function AreaChart({formid, data}) {
   React.useEffect(() => {
@@ -12,8 +11,10 @@ function AreaChart({formid, data}) {
       const c3 = await import('c3');
       let cols = data.args.vals[0];
       let rows = data.args.vals;
+      console.log("AreaChart() cols=" + JSON.stringify(cols, null, 2));
+      console.log("AreaChart() rows=" + JSON.stringify(rows, null, 2));
       let vals = [];
-      let colors = data.colors;
+      let colors = data.colors && data.colors.map(color => `#${color}`);
       let showXAxis = data.hideXAxis !== true;
       let showYAxis = data.hideYAxis !== true;
       let lineWidth = data.lineWidth;
@@ -22,6 +23,7 @@ function AreaChart({formid, data}) {
       let [min, max] = getRange(rows.slice(1)); // Slice off labels.
       let pad = (max - min) / 4;
       rows = rebaseValues(pad - min, rows);  // val + pad - min
+      console.log("[2] AreaChart() rows=" + JSON.stringify(rows, null, 2));
       let types = {}
       types[cols[cols.length - 1]] = "area";  // Use last column as values.
       let padding = {
@@ -40,6 +42,7 @@ function AreaChart({formid, data}) {
           }
         } // Otherwise, its undefine, scalar or object, which is fine.
       }
+      console.log("AreaChart() types=" + JSON.stringify(types, null, 2));
       var chart = c3.generate({
         bindto: '#chart',
         padding: padding,
@@ -213,8 +216,10 @@ const getRange = (vals, grouped, min, max) => {
 
 const rebaseValues = (offset, vals) => {
   let rebasedVals = [];
-  vals.forEach(val => {
-    if (val instanceof Array) {
+  vals.forEach((val, i) => {
+    if (i === 0) {
+      rebasedVals.push(val);  // Column name, so don't rebase.
+    } else if (val instanceof Array) {
       rebasedVals.push(rebaseValues(offset, val));
     } else if (!isNaN(+val)) {
       rebasedVals.push(+val + offset);
@@ -226,6 +231,7 @@ const rebaseValues = (offset, vals) => {
 };
 
 function render(nodes) {
+  console.log("render() nodes=" + JSON.stringify(nodes, null, 2));
   let elts = [];
   nodes = [].concat(nodes);
   let key = 1;
@@ -246,7 +252,9 @@ function render(nodes) {
           <AreaChart data={n} style={n.style} {...n}/>
         </div>
       );
+      break;
     case "str":
+        console.log("render() str n=" + JSON.stringify(n, null, 2));
       elts.push(<span className="u-full-width" key={key++} style={n.style}>{""+n.value}</span>);
       break;
     default:
@@ -300,17 +308,16 @@ const initData = {
   }
 };
 
-const sampleData = `
-{"type":"area-chart","args":{"vals":[["Signup Date","In-Store Signups"],["2018-05-27",14],["2018-05-28",3],["2018-05-29",3],["2018-05-30",1],["2018-05-31",0],["2018-06-01",1],["2018-06-02",4]]},"hideXAxis":true,"hideYAxis":true,"hideLegend":true,"dotRadius":1.5,"lineWidth":1,"colors":["#13ce66  "],"height":30,"width":144}
-`;
-
 const Form = () => {
   const [elts, setElts] = useState([]);
   const router = useRouter();
   const { type, id, data } = router.query
   useEffect(() => {
+    if (data === undefined) {
+      return;
+    }
     try {
-      setElts(render(JSON.parse(data || sampleData)));
+      setElts(render(JSON.parse(data)));
     } catch (x) {
       // Bad data.
       console.log("Bad data in query: " + x);
@@ -318,7 +325,6 @@ const Form = () => {
   }, [data]);
   return (
     <div id="graffiti"> {elts} </div>
-  );
-}
+  );}
 
 export default Form;

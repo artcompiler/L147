@@ -91,7 +91,6 @@ const transform = (function() {
     };
   }
   function visit(nid, options, resume) {
-    console.log("visit() nid=" + nid);
     assert(typeof resume === "function", message(1003));
     // Get the node from the pool of nodes.
     let node;
@@ -100,7 +99,6 @@ const transform = (function() {
     } else {
       node = nodePool[nid];
     }
-    console.log("visit() node.tag=" + node.tag + " table[node.tag]=" + table[node.tag]);
     assert(node, message(1001, [nid]));
     assert(node.tag, message(1001, [nid]));
     assert(typeof table[node.tag] === "function", message(1004, [JSON.stringify(node.tag)]));
