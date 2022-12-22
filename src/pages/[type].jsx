@@ -182,7 +182,7 @@ function TableChart({ data }) {
       return table;
     }
   }, [data]);
-  return <div className="c3"/>;
+  return <div />;
 }
 
 const getRange = (vals, grouped, min, max) => {
@@ -334,7 +334,7 @@ const Form = () => {
     })();
   }, [data]);
   return (
-    <div id="graffiti"> <svg> {elts} </svg> </div>
+    <div id="graffiti"  className="c3"> <svg> {elts} </svg> </div>
   );
 }
 
