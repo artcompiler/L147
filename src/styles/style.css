@@ -19,10 +19,12 @@ font-style:normal;font-weight:300;
   stroke: #000;
 }
 
-.c3 text {
+.c3 text, .c3 td {
   -webkit-user-select: none;
   -moz-user-select: none;
   user-select: none;
+  font-family: "proxima-nova", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  text-rendering: geometricPrecision;
 }
 
 .c3-legend-item-tile,

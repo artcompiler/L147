@@ -11,10 +11,8 @@ function AreaChart({formid, data}) {
       const c3 = await import('c3');
       let cols = data.args.vals[0];
       let rows = data.args.vals;
-      console.log("AreaChart() cols=" + JSON.stringify(cols, null, 2));
-      console.log("AreaChart() rows=" + JSON.stringify(rows, null, 2));
       let vals = [];
-      let colors = data.colors && data.colors.map(color => `#${color}`);
+      let colors = data.colors;
       let showXAxis = data.hideXAxis !== true;
       let showYAxis = data.hideYAxis !== true;
       let lineWidth = data.lineWidth;
@@ -23,7 +21,6 @@ function AreaChart({formid, data}) {
       let [min, max] = getRange(rows.slice(1)); // Slice off labels.
       let pad = (max - min) / 4;
       rows = rebaseValues(pad - min, rows);  // val + pad - min
-      console.log("[2] AreaChart() rows=" + JSON.stringify(rows, null, 2));
       let types = {}
       types[cols[cols.length - 1]] = "area";  // Use last column as values.
       let padding = {
@@ -42,9 +39,8 @@ function AreaChart({formid, data}) {
           }
         } // Otherwise, its undefine, scalar or object, which is fine.
       }
-      console.log("AreaChart() types=" + JSON.stringify(types, null, 2));
       var chart = c3.generate({
-        bindto: '#chart',
+        bindto: '#graffiti',
         padding: padding,
         transition: {
           duration: 0
@@ -89,32 +85,35 @@ function AreaChart({formid, data}) {
     })();
   }, [data]);
 
-  return <div id="chart" />;
+  return <div id="graffiti" />;
 }
 
 function TableChart({ data }) {
   React.useEffect(() => {
-    let data = data.args.vals.slice(1); // Slice off labels.
+    if (!data) {
+      return;
+    }
+    let values = data.args.vals.slice(1); // Slice off labels.
     let style = data.style;
     let padding = data.chartPadding || 0;
     let width = data.width - 2 * padding || "100%";
     let height = data.height - 2 * padding || "100%";
     // render the table
-    tabulate(data, ["Reward", "Count"]);
+    tabulate(values, ["Reward", "Count"]);
     if (style) {
       // Apply global styles.
       Object.keys(style).forEach(selector => {
         let styles = style[selector];
         Object.keys(styles).forEach(style => {
-          d3.selectAll(selector).style(style, styles[style]);
+          let value = styles[style];
+          d3.selectAll(selector).style(style, value);
         });
       });
     }
     
     // The table generation function
     function tabulate(data, columns) {
-      d3.select("#chart").html("");
-      var table = d3.select("#chart").append("svg"),
+      var table = d3.select("#graffiti svg"),
           tbody = table.append("g").classed("y-values", true);
       table
         .attr("width", width + 2 * padding)
@@ -182,7 +181,8 @@ function TableChart({ data }) {
           });
       return table;
     }
-  });
+  }, [data]);
+  return <div className="c3"/>;
 }
 
 const getRange = (vals, grouped, min, max) => {
@@ -243,7 +243,7 @@ function render(nodes) {
     switch (n.type) {
     case "table-chart":
       elts.push(
-        <TableChart key={key++} style={n.style} {...n}/>
+        <TableChart key={key++} data={n} style={n.style} {...n}/>
       );
       break;
     case "area-chart":
@@ -254,7 +254,6 @@ function render(nodes) {
       );
       break;
     case "str":
-        console.log("render() str n=" + JSON.stringify(n, null, 2));
       elts.push(<span className="u-full-width" key={key++} style={n.style}>{""+n.value}</span>);
       break;
     default:
@@ -311,20 +310,32 @@ const initData = {
 const Form = () => {
   const [elts, setElts] = useState([]);
   const router = useRouter();
-  const { type, id, data } = router.query
+  const { type, data } = router.query;
   useEffect(() => {
     if (data === undefined) {
       return;
     }
-    try {
-      setElts(render(JSON.parse(data)));
-    } catch (x) {
-      // Bad data.
-      console.log("Bad data in query: " + x);
-    }
+    const { url } = JSON.parse(data);
+    (async () => {
+      const resp = await fetch(
+        url,
+        { headers: {'Content-Type': 'application/json'}}
+      );
+      const { data } = await resp.json();
+      if (data === undefined) {
+        return;
+      }
+      try {
+        setElts(render(data));
+      } catch (x) {
+        // Bad data.
+        console.log("Bad data in query: " + x);
+      }
+    })();
   }, [data]);
   return (
-    <div id="graffiti"> {elts} </div>
-  );}
+    <div id="graffiti"> <svg> {elts} </svg> </div>
+  );
+}
 
 export default Form;
