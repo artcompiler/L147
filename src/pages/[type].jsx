@@ -243,7 +243,6 @@ function BarChart({formid, data}) {
         let dy = (height - 2) / count;
         let textSize = style.tspan && +style.tspan["font-size"] || 11.8;
         var rows = tbody.selectAll("text")
-          .data(rows.slice(1))  // Slice off labels.
           .enter()
           .append("text")
           .attr("x", 10 /*padding*/)
@@ -517,7 +516,6 @@ const rebaseValues = (offset, vals) => {
 };
 
 function render(nodes) {
-  console.log("render() nodes=" + JSON.stringify(nodes, null, 2));
   let elts = [];
   nodes = [].concat(nodes);
   let key = 1;

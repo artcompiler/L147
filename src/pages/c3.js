@@ -382,7 +382,7 @@
             .enter()
             .insert('g', '.domain')
             .attr('class', 'tick')
-            .style('opacity', 1e-6), 
+            .style('opacity', 1e-6),
         // MEMO: No exit transition. The reason is this transition affects max tick width calculation because old tick will be included in the ticks.
         tickExit = ticks.exit().remove(), tickUpdate = ticks.merge(tickEnter), tickTransform, tickX, tickY;
         if (params.isCategory) {
@@ -1393,6 +1393,7 @@
     $$.svg = $$.selectChart
       .append('svg')
       .style('overflow', 'hidden')
+      .style("shape-rendering", "auto")
       .on('mouseenter', function () {
         return config.onmouseover.call($$);
       })
@@ -3376,33 +3377,35 @@
       });
       // Add the pathSegList accessors to window.SVGPathElement.
       // Spec: http://www.w3.org/TR/SVG11/single-page.html#paths-InterfaceSVGAnimatedPathData
-      Object.defineProperty(window.SVGPathElement.prototype, 'pathSegList', {
-        get: function () {
-          if (!this._pathSegList)
-            this._pathSegList = new window.SVGPathSegList(this);
-          return this._pathSegList;
-        },
-        enumerable: true
-      });
-      // FIXME: The following are not implemented and simply return window.SVGPathElement.pathSegList.
-      Object.defineProperty(window.SVGPathElement.prototype, 'normalizedPathSegList', {
-        get: function () {
-          return this.pathSegList;
-        },
-        enumerable: true
-      });
-      Object.defineProperty(window.SVGPathElement.prototype, 'animatedPathSegList', {
-        get: function () {
-          return this.pathSegList;
-        },
-        enumerable: true
-      });
-      Object.defineProperty(window.SVGPathElement.prototype, 'animatedNormalizedPathSegList', {
-        get: function () {
-          return this.pathSegList;
-        },
-        enumerable: true
-      });
+      if (!window.SVGPathElement.prototype.pathSegList) {
+        Object.defineProperty(window.SVGPathElement.prototype, 'pathSegList', {
+          get: function () {
+            if (!this._pathSegList)
+              this._pathSegList = new window.SVGPathSegList(this);
+            return this._pathSegList;
+          },
+          enumerable: true
+        });
+        // FIXME: The following are not implemented and simply return window.SVGPathElement.pathSegList.
+        Object.defineProperty(window.SVGPathElement.prototype, 'normalizedPathSegList', {
+          get: function () {
+            return this.pathSegList;
+          },
+          enumerable: true
+        });
+        Object.defineProperty(window.SVGPathElement.prototype, 'animatedPathSegList', {
+          get: function () {
+            return this.pathSegList;
+          },
+          enumerable: true
+        });
+        Object.defineProperty(window.SVGPathElement.prototype, 'animatedNormalizedPathSegList', {
+          get: function () {
+            return this.pathSegList;
+          },
+          enumerable: true
+        });
+      }
       // Process any pending mutations to the path element and update the list as needed.
       // This should be the first call of all public functions and is needed because
       // MutationObservers are not synchronous so we can have pending asynchronous mutations.
@@ -5979,7 +5982,7 @@
       axis_x_tick_values: null,
       axis_x_tick_rotate: 0,
       axis_x_tick_outer: true,
-      axis_x_tick_multiline: true,
+      axis_x_tick_multiline: false,
       axis_x_tick_multilineMax: 0,
       axis_x_tick_width: null,
       axis_x_max: undefined,
@@ -7341,9 +7344,9 @@
     }
     else if (showVerticalDataLabel) {
       lengths = $$.getDataLabelLength(yDomainMin, yDomainMax, 'height');
-      var pixelsToAxisPadding = $$.getY(config["axis_" + axisId + "_type"], 
+      var pixelsToAxisPadding = $$.getY(config["axis_" + axisId + "_type"],
                                         // input domain as pixels
-                                        [0, config.axis_rotated ? $$.width : $$.height], 
+                                        [0, config.axis_rotated ? $$.width : $$.height],
                                         // output range as axis padding
                                         [0, domainLength]);
       padding_top += pixelsToAxisPadding(lengths[1]);
@@ -9145,29 +9148,57 @@
       // 4 points that make a bar
       var points = getPoints(d, i);
       // switch points if axis is rotated, not applicable for sub chart
-      var indexX = config.axis_rotated ? 1 : 0;
-      var indexY = config.axis_rotated ? 0 : 1;
-      var path = 'M ' +
-        points[0][indexX] +
-        ',' +
-        points[0][indexY] +
-        ' ' +
-        'L' +
-        points[1][indexX] +
-        ',' +
-        points[1][indexY] +
-        ' ' +
-        'L' +
-        points[2][indexX] +
-        ',' +
-        points[2][indexY] +
-        ' ' +
-        'L' +
-        points[3][indexX] +
-        ',' +
-        points[3][indexY] +
-        ' ' +
-        'z';
+      let h = config.axis_rotated;
+      var indexX = h ? 1 : 0;
+      var indexY = h ? 0 : 1;
+
+      let groups = config.data_groups && config.data_groups[0] || [];
+
+      let x1 = points[0][indexX];
+      let y1 = points[0][indexY];
+      let x2 = points[1][indexX];
+      let y2 = points[1][indexY];
+      let x3 = points[2][indexX];
+      let y3 = points[2][indexY];
+      let x4 = points[3][indexX];
+      let y4 = points[3][indexY];
+      let dx = h ? x2 - x1 : x3 - x2;
+      let dy = h ? y4 - y1 : y4 - y3;
+      let ry = h ? (y4 - y1) / 2 : (x4 - x1) / 2;
+      let rx = dx > ry ? ry : dx / 2;
+      let rx1, rx2, ry1, ry2;
+      let h1 = +config.data_json[i][groups[0]];
+      let h2 = +config.data_json[i][groups[1]];
+      if (groups.length === 2) {
+        if (groups.indexOf(d.id) === 0) {
+          // First bar.
+          rx1 = rx;
+          ry1 = ry;
+          rx2 = h2 ? 0 : rx;
+          ry2 = h2 ? 0 : ry;
+        } else {
+          // Second bar.
+          rx1 = h1 ? 0 : rx;
+          ry1 = h1 ? 0 : ry;
+          rx2 = rx;
+          ry2 = ry;
+        }
+      } else {
+        rx1 = rx2 = rx;
+        ry1 = ry2 = ry;
+      }
+      let p = config.axis_y_padding.bottom || 0;
+      var path = "";
+      if (dy) {
+        // Only draw bar if it has a non-zero height.
+        path =
+          'M' + (h ? x1 + rx1 + p : x1) + ',' + (h ? y1 : y1 - ry1 - p) + ' ' +
+          'L' + (h ? x2 - rx2 : x2) + ',' + (h ? y2 : y2 + ry2) + ' ' +
+          'A' + rx2 + "," + ry2 + " 0 0 1 " + (h ? x3 - rx2 : x3) + ',' + (h ? y3 : y3 + ry2) + ' ' +
+          'L' + (h ? x4 + rx1 + p : x4) + ',' + (h ? y4 : y4 - ry1 - p) + " " +
+          'A' + rx1 + "," + ry1 + " 0 0 1 " + (h ? x1 + rx1 + p : x1) + ',' + (h ? y1 : y1 - ry1 - p) + ' ' +
+          'z';
+      }
       return path;
     };
   };
@@ -9385,7 +9416,7 @@
       .merge(mainLine)
       .style('opacity', $$.initialOpacity.bind($$))
       .style('shape-rendering', function (d) {
-        return $$.isStepType(d) ? 'crispEdges' : '';
+        return $$.isStepType(d) ? 'geometricPrecision' : '';
       })
       .attr('transform', null);
     mainLine
