@@ -9,7 +9,7 @@ font-style:normal;font-weight:300;
 /*-- Chart --*/
 .c3 svg {
   font-family: "proxima-nova", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  -webkit-tap-highlight-color: transparent;
+  -webkit-tap-highlight-color: transparent; }
   font: 10px sans-serif;
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
@@ -19,12 +19,10 @@ font-style:normal;font-weight:300;
   stroke: #000;
 }
 
-.c3 text, .c3 td {
+.c3 text {
   -webkit-user-select: none;
   -moz-user-select: none;
   user-select: none;
-  font-family: "proxima-nova", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  text-rendering: geometricPrecision;
 }
 
 .c3-legend-item-tile,
@@ -253,4 +251,12 @@ font-style:normal;font-weight:300;
 }
 
 /* End C3 defaults */
+
+.c3-line {
+  stroke-width: 7px;
+  stroke-linecap: round;
+}
+.c3-axis {
+  color: "#777";
+}
 

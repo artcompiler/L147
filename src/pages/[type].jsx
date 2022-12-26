@@ -31,7 +31,7 @@ function BarChart({formid, data}) {
       if (!data || Object.keys(data).length === 0) {
         return;
       }
-      const c3 = await import('c3');
+      const c3 = await import('./c3');
       let xAxisLabel = data.xAxisLabel;
       let yAxisLabel = data.yAxisLabel;
       let barWidth = data.barWidth || {ratio: 0.5};
@@ -294,7 +294,7 @@ function AreaChart({formid, data}) {
       if (!data || Object.keys(data).length === 0) {
         return;
       }
-      const c3 = await import('c3');
+      const c3 = await import('./c3');
       let cols = data.args.vals[0];
       let rows = data.args.vals;
       let vals = [];
