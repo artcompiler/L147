@@ -1,4 +1,4 @@
-/* Copyright (c) 2019, Art Compiler LLC */
+/* Copyright (c) 2022, Artcompiler Inc */
 import {
   assert,
   message,
@@ -35,10 +35,6 @@ const transform = (function() {
     "SHOW-Y-VALUES": showYValues,
     "STACK": stack,
     "DOT-RADIUS": dotRadius,
-    "PALETTE": palette,
-    "RGB": rgb,
-    "ROWS": rows,
-    "COLS": cols,
     "BAR-WIDTH": barWidth,
     "WIDTH": width,
     "HEIGHT": height,
@@ -49,7 +45,6 @@ const transform = (function() {
     "BAR-CHART": barChart,
     "TIMESERIES-CHART": timeseriesChart,
     "AREA-CHART": areaChart,
-    "HEATMAP": heatmap,
     "PROG" : program,
     "EXPRS" : exprs,
     "STR": str,
@@ -67,8 +62,8 @@ const transform = (function() {
     "STYLE" : style,
     "CONCAT" : concat,
     "ARG" : arg,
-    "DEFAULTS" : defaults,
-    "IN" : defaults,
+    "IN" : inData,
+    "DEFAULTS" : inData,
     "LAMBDA" : lambda,
     "PAREN" : paren,
     "APPLY" : apply,
@@ -144,42 +139,11 @@ const transform = (function() {
   };
   function areaChart(node, options, resume) {
     visit(node.elts[0], options, function (err0, val0) {
-      let vals = [];
-      let keys = Object.keys(val0[0]);
-      vals.push(keys);
-      val0.forEach((v, i) => {
-        if (+v[keys[1]] < 120) {
-          vals.push([
-            v[keys[0]],
-            v[keys[1]],
-          ]);
-        }
-      });
+      let vals = val0;
       resume([].concat(err0), {
         type: "area-chart",
         args: {
           vals: vals,
-        }
-      });
-    });
-  };
-  function heatmap(node, options, resume) {
-    visit(node.elts[0], options, function (err0, val0) {
-      // let vals = [];
-      // let keys = Object.keys(val0[0]);
-      // vals.push(keys);
-      // val0.forEach((v, i) => {
-      //   if (+v[keys[1]] < 120) {
-      //     vals.push([
-      //       v[keys[0]],
-      //       v[keys[1]],
-      //     ]);
-      //   }
-      // });
-      resume([].concat(err0), {
-        type: "heatmap",
-        args: {
-          vals: val0,
         }
       });
     });
@@ -256,137 +220,6 @@ const transform = (function() {
     visit(node.elts[0], options, function (err0, val0) {
       visit(node.elts[1], options, function (err1, val1) {
         val1.dotRadius = val0;
-        resume([].concat(err0).concat(err1), val1);
-      });
-    });
-  };
-  function palette(node, options, resume) {
-    visit(node.elts[0], options, function (err0, val0) {
-      visit(node.elts[1], options, function (err1, val1) {
-        val1.palette = val0;
-        resume([].concat(err0).concat(err1), val1);
-      });
-    });
-  }
-  function decimalToHex(d, padding) {
-    var hex = Number(d).toString(16);
-    padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
-    while (hex.length < padding) {
-        hex = "0" + hex;
-    }
-    return hex;
-  }
-  function rgb(node, options, resume) {
-    visit(node.elts[0], options, function (err0, val0) {
-      console.log("rgb() val0=" + JSON.stringify(val0));
-      let r = decimalToHex(val0[0], 2);
-      let g = decimalToHex(val0[1], 2);
-      let b = decimalToHex(val0[2], 2);
-      let val = "#" + r + g + b;
-      resume([].concat(err0), val);
-    });
-  }
-  function rowLabels(node, options, resume) {
-    visit(node.elts[0], options, function (err0, val0) {
-      visit(node.elts[1], options, function (err1, val1) {
-        val1.rowLabels = val0;
-        resume([].concat(err0).concat(err1), val1);
-      });
-    });
-  };
-  function rows(node, options, resume) {
-    visit(node.elts[0], options, function (err0, val0) {
-      visit(node.elts[1], options, function (err1, val1) {
-        let rows = val1.rows = val0[0];
-        let vals = val1.args.vals;
-        let name = rows.name;
-        let type = "none";
-        let newVals = [];
-        vals.forEach(v => {
-          newVals.push(Object.assign({}, v, {
-            row: v[name],
-            label: v[name],
-            val: v.value, //scale(v.value, val1.rows),
-            tip: v.value + (rows.units && " " + rows.units || ""),
-          }));
-        });
-        val1.args.vals = newVals;
-        resume([].concat(err0).concat(err1), val1);
-        // val1.rows = val0;
-        // let vals = val1.args.vals;
-        // let rows = val1.rows;
-        // let newVals = []
-        // vals.forEach(v => {
-        //   rows.forEach((r, i) => {
-        //     let name = r.name;
-        //     newVals.push(Object.assign({}, v, {
-        //       row: i,un
-        //       val: scale(v[name], r),
-        //       tip: v[name] + (r.units && " " + r.units || ""),
-        //     }));
-        //   });
-        // });
-        // val1.args.vals = newVals;
-        // resume([].concat(err0).concat(err1), val1);
-      });
-    });
-    function scale(v, r) {
-      let [NONE, NORMAL, WARNING, CRITICAL] = [0, 1, 2, 3];
-      if (r.normal) {
-        let breaks = r.normal;
-        for (let i = 0; i < breaks.length; i += 2) {
-          if (v >= breaks[i] && v < breaks[i + 1]) {
-            return NORMAL;
-          }
-        }
-      }
-      if (r.warning) {
-        let breaks = r.warning;
-        for (let i = 0; i < breaks.length; i += 2) {
-          if (v >= breaks[i] && v < breaks[i + 1]) {
-            return WARNING;
-          }
-        }
-      }
-      if (r.critical) {
-        let breaks = r.critical;
-        for (let i = 0; i < breaks.length; i += 2) {
-          if (v >= breaks[i] && v < breaks[i + 1]) {
-            return CRITICAL;
-          }
-        }
-      }
-      return NONE;
-    }
-  };
-  function cols(node, options, resume) {
-    visit(node.elts[0], options, function (err0, val0) {
-      visit(node.elts[1], options, function (err1, val1) {
-        val1.cols = val0[0];
-        let vals = val1.args.vals;
-        let name = val1.cols.name;
-        let type = "time"
-        let interval = val1.cols.interval;
-        vals.forEach(v => {
-          switch (type) {
-          case "time":
-            let t = new Date(v[name]);
-            switch (interval) {
-            case "day":
-              v.col = t.getDate() - 1;
-              break;
-            case "hour":
-              v.col = t.getHours();
-              break;
-            case "minute":
-              v.col = t.getMinutes();
-              break;
-            }
-            break;
-          default:
-            break;
-          }
-        });
         resume([].concat(err0).concat(err1), val1);
       });
     });
@@ -543,7 +376,7 @@ const transform = (function() {
       resume([], []);
     }
   }
-  function defaults(node, options, resume) {
+  function inData(node, options, resume) {
     // If there is input data, then use it, otherwise use default data.
     if (node.elts.length === 0) {
       // No args, so use the given data or empty.

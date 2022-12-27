@@ -8,7 +8,6 @@ export default function compileHandler(req, res) {
   switch (method) {
   case 'POST':      
     let body = req.body;
-    console.log("POST /compile body=" + JSON.stringify(body, null, 2));
     let code = body.code || body.src;
     let data = body.data;
     let config = body.config || {};
