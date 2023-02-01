@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import * as d3 from 'd3';
+import bent from "bent";
+
+const getJSON = bent("json");
+
 
 const getDate = (str) => {
   let [y, m, d] = str.split("-");
@@ -515,14 +519,14 @@ const rebaseValues = (offset, vals) => {
   return rebasedVals;
 };
 
-function render(nodes) {
+function renderElts(nodes) {
   let elts = [];
   nodes = [].concat(nodes);
   let key = 1;
   nodes.forEach(function (n, i) {
     let args = [];
     if (n.args) {
-      args = render(n.args);
+      args = renderElts(n.args);
     }
     switch (n.type) {
     case "table-chart":
@@ -601,29 +605,25 @@ const initData = {
 const Form = () => {
   const [elts, setElts] = useState([]);
   const router = useRouter();
-  const { type, data } = router.query;
+  const { id, url } = router.query;
+  let { data } = router.query;
   useEffect(() => {
-    if (data === undefined) {
-      return;
-    }
-    const { url } = JSON.parse(data);
     (async () => {
-      const resp = await fetch(
-        url,
-        { headers: {'Content-Type': 'application/json'}}
-      );
-      const { data } = await resp.json();
+      if (url) {
+        const resp = await getJSON(url);
+        data = resp.data;
+      }
       if (data === undefined) {
         return;
       }
       try {
-        setElts(render(data));
+        setElts(renderElts(data));
       } catch (x) {
         // Bad data.
         console.log("Bad data in query: " + x);
       }
     })();
-  }, [data]);
+  }, [url, data]);
   return (
     <div id="graffiti"  className="c3"> <svg> {elts} </svg> </div>
   );
